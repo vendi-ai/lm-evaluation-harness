@@ -11,7 +11,6 @@ import sklearn.metrics
 
 from lm_eval.api.registry import register_aggregation, register_metric
 
-
 eval_logger = logging.getLogger("lm-eval")
 
 
@@ -175,7 +174,14 @@ exact_match = hf_evaluate.load("exact_match")
     aggregation="mean",
 )
 def exact_match_fn(**kwargs):
-    return exact_match.compute(**kwargs)
+    predictions = kwargs.pop("predictions")
+    references = kwargs.pop("references")
+    # Strip the predictions and references of any leading/trailing whitespace
+    predictions = [p.strip() for p in predictions]
+    references = [r.strip() for r in references]
+    return exact_match.compute(
+        predictions=predictions, references=references, **kwargs
+    )
 
 
 @register_metric(
@@ -459,8 +465,8 @@ def pooled_sample_stderr(stderrs: List[float], sizes: List[int]):
     # this empirically seems to match running `stderr_for_metric` on all instances
     # from the subtasks concatenated with each other.
     pooled_sample_var = (
-        sum([(size - 1) * stderr**2 * size for size, stderr in zip(sizes, stderrs)])
-    ) / (sum(sizes) - len(sizes))
+                            sum([(size - 1) * stderr ** 2 * size for size, stderr in zip(sizes, stderrs)])
+                        ) / (sum(sizes) - len(sizes))
 
     return np.sqrt(pooled_sample_var / sum(sizes))
 
@@ -488,11 +494,11 @@ def combined_sample_stderr(stderrs: List[float], sizes: List[int], metrics=None)
             curr_size + size
         )  # NOTE: this assumes our aggregation fn is "mean"
 
-        variance = ((curr_size - 1) * variance + (size - 1) * (stderr**2)) / (
+        variance = ((curr_size - 1) * variance + (size - 1) * (stderr ** 2)) / (
             curr_size + size - 1
         ) + curr_size * size / ((curr_size + size) * (curr_size + size - 1)) * (
-            curr_score - score
-        ) ** 2
+                       curr_score - score
+                   ) ** 2
 
     return np.sqrt(variance)
 
