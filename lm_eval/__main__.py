@@ -415,7 +415,7 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
         ### Vendi Adapter
         if args.output_path:
             metadata_file = copy.deepcopy(results)
-            metadata_file["model_name"] = simple_parse_args_string(args.model_args).get("pretrained")
+            metadata_file["config"]["model_name"] = simple_parse_args_string(args.model_args).get("pretrained")
             for task_name, config in results["configs"].items():
                 output_name = "{}_{}".format(
                     re.sub(r"[\"<>:/\|\\?\*\[\]]+", "__", args.model_args),
