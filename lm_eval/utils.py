@@ -13,7 +13,6 @@ import numpy as np
 import yaml
 from jinja2 import BaseLoader, Environment, StrictUndefined
 
-
 logging.basicConfig(
     format="%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
     datefmt="%Y-%m-%d:%H:%M:%S",
@@ -60,7 +59,7 @@ def handle_arg_string(arg):
         return arg
 
 
-def simple_parse_args_string(args_string):
+def simple_parse_args_string(args_string) -> dict:
     """
     Parses something like
         args1=val1,arg2=val2
@@ -154,8 +153,8 @@ def get_rolling_token_windows(token_list, prefix_token, max_seq_len, context_len
         window_end = predicted + window_pred_len
 
         yield (
-            token_list[window_end - max_seq_len - 1 : window_end - 1],
-            token_list[window_end - window_pred_len : window_end],
+            token_list[window_end - max_seq_len - 1: window_end - 1],
+            token_list[window_end - window_pred_len: window_end],
         )
         predicted += window_pred_len
 

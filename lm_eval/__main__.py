@@ -1,4 +1,5 @@
 import argparse
+import copy
 import json
 import logging
 import os
@@ -15,7 +16,6 @@ from lm_eval.evaluator import request_caching_arg_to_dict
 from lm_eval.logging_utils import WandbLogger
 from lm_eval.tasks import TaskManager
 from lm_eval.utils import make_table, simple_parse_args_string
-
 
 DEFAULT_RESULTS_FILE = "results.json"
 
@@ -131,7 +131,7 @@ def setup_parser() -> argparse.ArgumentParser:
         default=None,
         metavar="N|0<N<1",
         help="Limit the number of examples per task. "
-        "If <1, limit is a percentage of the total number of examples.",
+             "If <1, limit is a percentage of the total number of examples.",
     )
     parser.add_argument(
         "--use_cache",
@@ -411,6 +411,22 @@ def cli_evaluate(args: Union[argparse.Namespace, None] = None) -> None:
         if args.wandb_args:
             # Tear down wandb run once all the logging is done.
             wandb_logger.run.finish()
+
+        ### Vendi Adapter
+        if args.output_path:
+            metadata_file = copy.deepcopy(results)
+            metadata_file["model_name"] = simple_parse_args_string(args.model_args).get("pretrained")
+            for task_name, config in results["configs"].items():
+                output_name = "{}_{}".format(
+                    re.sub(r"[\"<>:/\|\\?\*\[\]]+", "__", args.model_args),
+                    task_name,
+                )
+                filename = path.joinpath(f"{output_name}.jsonl")
+                metadata_file["configs"][task_name]["samples_filename"] = str(filename)
+
+            metadata_file_path = path.joinpath("adapter_results.json")
+            with open(metadata_file_path, "w") as f:
+                json.dump(metadata_file, f, indent=2)
 
 
 if __name__ == "__main__":
